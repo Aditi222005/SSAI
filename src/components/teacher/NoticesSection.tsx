@@ -46,7 +46,7 @@ export function NoticesSection() {
   const fetchNotices = async () => {
     setIsLoading(true);
     try {
-const response = await fetch(`${process.env.NEXT_PUBLIC_CHROMA_DB_URL}/api/notices`);
+const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/notices`);
       if (!response.ok) throw new Error("Failed to fetch notices");
       const data = await response.json();
       setNotices(data);
@@ -102,14 +102,14 @@ const response = await fetch(`${process.env.NEXT_PUBLIC_CHROMA_DB_URL}/api/notic
       let response;
       if (editingNotice) {
         // This is an UPDATE (PUT request)
-        response = await fetch(`/api/notices/${editingNotice._id}`, {
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/notices/${editingNotice._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
       } else {
         // This is a CREATE (POST request)
-        response = await fetch('/api/notices', {
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/notices`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...formData, status: 'draft' })
@@ -129,7 +129,7 @@ const response = await fetch(`${process.env.NEXT_PUBLIC_CHROMA_DB_URL}/api/notic
 
   const handlePublishNotice = async (id: string) => {
     try {
-        const response = await fetch(`/api/notices/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/notices/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'published' })
@@ -145,7 +145,7 @@ const response = await fetch(`${process.env.NEXT_PUBLIC_CHROMA_DB_URL}/api/notic
   const handleDeleteNotice = async (id: string) => {
     if (!confirm("Are you sure you want to delete this notice?")) return;
     try {
-        const response = await fetch(`/api/notices/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/notices/${id}`, {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error("Failed to delete notice");

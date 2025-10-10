@@ -57,7 +57,7 @@ export function MaterialsSection() {
     const fetchMaterials = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('/api/materials')
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/materials`)
         if (!response.ok) {
           throw new Error('Failed to fetch materials from the server.')
         }

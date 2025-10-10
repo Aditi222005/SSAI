@@ -34,7 +34,7 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chatbot', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'}/chatbot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: messageText }),
