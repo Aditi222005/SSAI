@@ -5,15 +5,20 @@ import { SendHorizontal, Bot, User, Cpu } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function Chatbot() {
-  const [messages, setMessages] = useState([
-    {
-      sender: 'bot',
-      text: "Hello! I'm your college assistant. I can help you with exam dates, academic calendar, study materials, notices, and more. What would you like to know?",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    // Add initial bot message after hydration to avoid mismatch
+    setMessages([
+      {
+        sender: 'bot',
+        text: "Hello! I'm your college assistant. I can help you with exam dates, academic calendar, study materials, notices, and more. What would you like to know?",
+      },
+    ]);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
