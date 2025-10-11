@@ -1,16 +1,6 @@
-# TODO: Separate Backend and Prepare for Vercel Hosting
+# TODO: Fix ESLint Build Error on Vercel
 
-## Steps to Complete
-- [ ] Create backend/ folder
-- [ ] Move src/app/api/ to backend/src/api/
-- [ ] Move src/lib/mongodb.js to backend/src/lib/
-- [ ] Move run_server.py, test_chroma.py, chroma_db to backend/
-- [ ] Move src/app/api/chatbot/aiTraining.js to backend/src/api/chatbot/
-- [ ] Create backend/package.json with Express and required dependencies
-- [ ] Create backend/server.js with Express app setup
-- [ ] Update moved API route files to Express syntax
-- [ ] Update imports in backend files to relative paths
-- [ ] Update frontend components to call backend API URLs
-- [ ] Update package.json scripts for local development
-- [ ] Test the separated project locally
-- [ ] Ensure frontend is ready for Vercel deployment
+- [x] Update "eslint-config-next" in package.json from "14.0.0" to "^15.4.5"
+- [x] Run `npm install` to update dependencies
+- [x] Run `npm run lint` locally to verify ESLint error is resolved
+- [x] Commit changes and redeploy to Vercel to confirm build succeeds
