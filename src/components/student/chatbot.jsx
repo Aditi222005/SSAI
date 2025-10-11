@@ -44,8 +44,16 @@ export default function Chatbot() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: messageText }),
       });
-      if (!response.ok) throw new Error('API response not OK');
+      console.log('Chatbot API response status:', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Chatbot API error response:', errorText);
+        throw new Error(`API response not OK: ${response.status}`);
+      }
       const data = await response.json();
+      if (!data || !data.reply) {
+        throw new Error('Invalid response from chatbot API');
+      }
       const botMessage = { sender: 'bot', text: data.reply };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     } catch (error) {

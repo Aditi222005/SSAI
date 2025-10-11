@@ -64,9 +64,12 @@ export function UploadSection() {
           method: 'POST',
           body: formData,
         });
+        const data = await response.json();
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Upload failed');
+          throw new Error(data.error || 'Upload failed');
+        }
+        if (data.ingested === false) {
+          throw new Error('Upload succeeded but processing for chatbot search failed');
         }
         setUploadedFiles(prev => 
           prev.map(f => f.id === fileInfo.id ? { ...f, status: 'success' } : f)

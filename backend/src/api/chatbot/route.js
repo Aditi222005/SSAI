@@ -100,63 +100,48 @@ You can view or download the file directly using this link:
 
    
 
-    // General AI RAG Logic for all other questions
+    // General AI RAG Logic for all other questions
+    console.log("General query detected. Searching ChromaDB...");
+    let context = "No relevant information found.";
+    try {
+      const embeddingResponse = await runCloudflareAI('@cf/baai/bge-base-en-v1.5', { text: [message] });
+      const queryEmbedding = embeddingResponse.result.data[0];
 
-    console.log("General query detected. Searching ChromaDB...");
+      const collection = await chroma.getOrCreateCollection({ name: "studysync_materials" });
+      const results = await collection.query({ queryEmbeddings: [queryEmbedding], nResults: 5 });
+      context = results.documents[0]?.join("\n\n---\n\n") || "No relevant information found.";
+    } catch (ragError) {
+      console.error("RAG retrieval failed:", ragError);
+      context = "No relevant information found from uploaded documents.";
+    }
 
-    const embeddingResponse = await runCloudflareAI('@cf/baai/bge-base-en-v1.5', { text: [message] });
+    const prompt = `
+      You are StudySync AI, a helpful college assistant for RCPIT.
+      Use your PERMANENT TRAINING for general college info.
+      Use the retrieved CONTEXT to answer questions about specific uploaded documents.
+      Be helpful and concise.
 
-    const queryEmbedding = embeddingResponse.result.data[0];
+      PERMANENT TRAINING:
+      ${RCPIT_TRAINING}
 
+      CONTEXT:
+      ---
+      ${context}
+      ---
 
+      USER QUESTION:
+      ${message}`;
 
-    const collection = await chroma.getOrCreateCollection({ name: "studysync_materials" });
-
-    const results = await collection.query({ queryEmbeddings: [queryEmbedding], nResults: 5 });
-
-    const context = results.documents[0]?.join("\n\n---\n\n") || "No relevant information found.";
-
-
-
-    const prompt = `
-
-      You are StudySync AI, a helpful college assistant for RCPIT.
-
-      Use your PERMANENT TRAINING for general college info.
-
-      Use the retrieved CONTEXT to answer questions about specific uploaded documents.
-
-      Be helpful and concise.
-
-
-
-      PERMANENT TRAINING:
-
-      ${RCPIT_TRAINING}
-
-
-
-      CONTEXT:
-
-      ---
-
-      ${context}
-
-      ---
-
-
-
-      USER QUESTION:
-
-      ${message}`;
-
-
-
-    const responseAI = await runCloudflareAI('@cf/meta/llama-3-8b-instruct', { prompt });
-
-   
-
-    return res.status(200).json({ reply: responseAI.result.response });
+    let aiResponse;
+    try {
+      const responseAI = await runCloudflareAI('@cf/meta/llama-3-8b-instruct', { prompt });
+      aiResponse = responseAI.result.response;
+    } catch (aiError) {
+      console.error("AI generation failed:", aiError);
+      aiResponse = "I'm experiencing technical difficulties with my AI capabilities right now. However, based on general RCPIT information, I can help with basic queries about exams, notices, and schedules. Please try rephrasing your question or check back later.";
+    }
+  
+    return res.status(200).json({ reply: aiResponse });
 
 
 

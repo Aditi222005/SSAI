@@ -43,8 +43,8 @@ export default (chroma, runCloudflareAI) => async (req, res) => {
       return res.status(200).json({ success: true, message: `Successfully ingested ${file.originalname}` });
 
     } catch (error) {
-      console.error("Ingestion Error:", error);
-      return res.status(500).json({ error: "Failed to ingest document" });
+      console.error("Ingestion Error Details:", error.message, error.stack);
+      return res.status(500).json({ error: "Failed to ingest document", details: error.message });
     }
   } else {
     res.status(405).json({ error: 'Method not allowed' });
