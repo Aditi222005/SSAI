@@ -23,6 +23,12 @@ async function getChroma() {
   return chromaClient;
 }
 
+// Vectorize setup - no client needed, use API directly
+const vectorizeIndexId = process.env.VECTORIZE_INDEX_ID;
+if (!vectorizeIndexId) {
+  console.warn('VECTORIZE_INDEX_ID not set - RAG will skip vector search');
+}
+
 async function runCloudflareAI(model, inputs) {
   const AI_GATEWAY = `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/ai/run`;
   const response = await fetch(`${AI_GATEWAY}/${model}`, {

@@ -174,43 +174,57 @@ export default (chroma) => async (req, res) => {
 
 
 
-    // Step 4: Save extracted text to ChromaDB for searching
+    // Step 4: Save extracted text to Pinecone for searching
 
-    if (documentText) {
+    if (documentText) {
 
-      const collection = await chroma.getOrCreateCollection({ name: "studysync_materials", metadata: { "hnsw:space": "cosine" } });
+      const pineconeApiKey = process.env.PINECONE_API_KEY;
 
-      const chunks = documentText.split("\n").filter(chunk => chunk.trim() !== ""); // Split by line for OCR text
+      const pineconeIndexName = process.env.PINECONE_INDEX_NAME;
 
-      if (chunks.length > 0) {
+      if (!pineconeApiKey || !pineconeIndexName) {
 
-          const embeddingResponse = await runCloudflareAIJson('@cf/baai/bge-base-en-v1.5', { text: chunks });
+        console.warn('PINECONE_API_KEY or PINECONE_INDEX_NAME not set, skipping vector storage');
 
-          const embeddings = embeddingResponse.result.data;
+      } else {
 
-          let idCounter = Date.now();
+        const { Pinecone } = await import('@pinecone-database/pinecone');
 
-          for (let i = 0; i < chunks.length; i++) {
+        const pinecone = new Pinecone({ apiKey: pineconeApiKey });
 
-              await collection.add({
+        const index = pinecone.Index(pineconeIndexName);
 
-                  ids: [`${file.originalname}-${idCounter++}`],
+        const chunks = documentText.split("\n").filter(chunk => chunk.trim() !== ""); // Split by line for OCR text
 
-                  embeddings: [embeddings[i]],
+        if (chunks.length > 0) {
 
-                  metadatas: [{ source: file.originalname, fileURL, category: category }],
+          const embeddingResponse = await runCloudflareAIJson('@cf/baai/bge-base-en-v1.5', { text: chunks });
 
-                  documents: [chunks[i]],
+          const embeddings = embeddingResponse.result.data.map(d => d.embedding);
 
-              });
+          const ids = chunks.map((_, i) => `${file.originalname}-${Date.now() + i}`);
 
-          }
+          const metadatas = chunks.map(chunk => ({ source: file.originalname, fileURL, category: category, text: chunk }));
 
-      }
+          const vectors = chunks.map((chunk, i) => ({
 
-      console.log("Successfully saved text chunks to ChromaDB.");
+            id: ids[i],
 
-    }
+            values: embeddings[i],
+
+            metadata: metadatas[i]
+
+          }));
+
+          await index.upsert({ vectors });
+
+          console.log("Successfully saved text chunks to Pinecone.");
+
+        }
+
+      }
+
+    }
 
 
 

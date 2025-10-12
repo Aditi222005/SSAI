@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 const form = new FormData();
 form.append('file', fs.createReadStream('active.pdf'));
 
-fetch('http://localhost:3001/ingest', {
+fetch('https://studysync-backend-m7fx.onrender.com/upload-file', {
   method: 'POST',
   body: form
 })

@@ -101,15 +101,31 @@ You can view or download the file directly using this link:
    
 
     // General AI RAG Logic for all other questions
-    console.log("General query detected. Searching ChromaDB...");
+    console.log("General query detected. Searching Pinecone...");
     let context = "No relevant information found.";
     try {
-      const embeddingResponse = await runCloudflareAI('@cf/baai/bge-base-en-v1.5', { text: [message] });
-      const queryEmbedding = embeddingResponse.result.data[0];
+      const pineconeApiKey = process.env.PINECONE_API_KEY;
+      const pineconeIndexName = process.env.PINECONE_INDEX_NAME;
+      if (!pineconeApiKey || !pineconeIndexName) {
+        throw new Error('PINECONE_API_KEY or PINECONE_INDEX_NAME not set');
+      }
 
-      const collection = await chroma.getOrCreateCollection({ name: "studysync_materials" });
-      const results = await collection.query({ queryEmbeddings: [queryEmbedding], nResults: 5 });
-      context = results.documents[0]?.join("\n\n---\n\n") || "No relevant information found.";
+      const { Pinecone } = await import('@pinecone-database/pinecone');
+      const pinecone = new Pinecone({ apiKey: pineconeApiKey });
+      const index = pinecone.Index(pineconeIndexName);
+
+      const embeddingResponse = await runCloudflareAI('@cf/baai/bge-base-en-v1.5', { text: [message] });
+      const queryEmbedding = embeddingResponse.result.data[0].embedding;
+
+      const queryResponse = await index.query({
+        vector: queryEmbedding,
+        topK: 5,
+        includeMetadata: true,
+        includeValues: true
+      });
+
+      const matches = queryResponse.matches || [];
+      context = matches.map(match => match.metadata.text || match.values).join("\n\n---\n\n") || "No relevant information found.";
     } catch (ragError) {
       console.error("RAG retrieval failed:", ragError);
       context = "No relevant information found from uploaded documents.";
